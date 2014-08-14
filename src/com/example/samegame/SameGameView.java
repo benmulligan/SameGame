@@ -178,7 +178,7 @@ public class SameGameView extends View implements OnTouchListener
 
         	if (!touchIsOnBoard(xPos, yPos))
         	{
-        		System.out.println("Touch not on board!");
+        		Log.i("SameGame", "Touch not on board!");
         		return false;
         	}
         	

@@ -127,7 +127,7 @@ public class SameGameModel
 		this.grid[row][col] = value;
 	}
 	
-	private boolean cellIsEmpty(int row, int col)
+	public boolean cellIsEmpty(int row, int col)
 	{
 		return getValueForCell(row, col) == emptyCellValue;
 	}
@@ -337,4 +337,33 @@ public class SameGameModel
 		}
 	}
 
+	public void destroyRow(int row)
+	{
+		for (int c = 0; c < this.numColumns; c++)
+		{
+			this.setValueForCell(row, c, this.emptyCellValue);
+		}	
+	}
+	
+	public void destroyCol(int col)
+	{
+		for (int r = 0; r < this.numRows; r++)
+		{
+			this.setValueForCell(r, col, this.emptyCellValue);
+		}
+	}
+	
+	public void destroy9x9Square(int centerRow, int centerCol)
+	{	
+		this.setValueForCell(centerRow, centerCol, this.emptyCellValue);
+		this.setValueForCell(centerRow, centerCol+1, this.emptyCellValue);
+		this.setValueForCell(centerRow, centerCol-1, this.emptyCellValue);
+		this.setValueForCell(centerRow+1, centerCol, this.emptyCellValue);
+		this.setValueForCell(centerRow+1, centerCol+1, this.emptyCellValue);
+		this.setValueForCell(centerRow+1, centerCol-1, this.emptyCellValue);
+		this.setValueForCell(centerRow-1, centerCol, this.emptyCellValue);
+		this.setValueForCell(centerRow-1, centerCol+1, this.emptyCellValue);
+		this.setValueForCell(centerRow-1, centerCol-1, this.emptyCellValue);
+	}
+	
 }

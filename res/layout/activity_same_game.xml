@@ -1,12 +1,60 @@
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-	android:layout_width="match_parent"
-	android:layout_height="match_parent">
+
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingLeft="16dp"
+    android:paddingRight="16dp" 
+    android:orientation="vertical" >
 	
 	<com.example.samegame.SameGameView
-	 android:id="@+id/samegame"
-		android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                />
+	    android:id="@+id/samegame"
+		android:layout_width="wrap_content"
+        android:layout_height="100px"
+        />
+	<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	    android:id="@+id/buttonBar"
+	    android:layout_width="match_parent"
+        android:layout_height="60px"
+        android:layout_below="@id/samegame"
+        >
+        
+	    
+    <Button android:id="@+id/buttonBomb"
+        android:layout_weight="1"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:text="Bomb"
+        android:onClick="onClickBomb" />
+    <Button android:id="@+id/buttonRowDestroy"
+        android:layout_weight="1"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:text="Row"
+        android:onClick="onClickRowDestroy" />
+    <Button android:id="@+id/buttonColDestroy"
+        android:layout_weight="1"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:text="Col"
+        android:onClick="onClickColDestroy" />
+        
+    
+     <Button android:id="@+id/buttonSkip"
+        android:layout_weight="1"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_gravity="right"
+        android:text="Skip"
+        android:onClick="onClickSkip" />        
+    <Button android:id="@+id/buttonReset"
+ 		android:layout_weight="1"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_gravity="right"
+        android:text="Reset" 
+        android:onClick="onClickReset" />
+        
+    </LinearLayout>
+</RelativeLayout>
 
-	
-</FrameLayout>

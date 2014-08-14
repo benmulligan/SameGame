@@ -6,11 +6,15 @@ import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Display;
+import android.view.View;
+import android.view.ViewGroup.LayoutParams;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.RelativeLayout;
 
 public class SameGame extends Activity {
 
+	
 	
     private SameGameView sgView;
     private SameGameModel sgModel;
@@ -84,7 +88,6 @@ public class SameGame extends Activity {
     	int screenWidth = 0;
     	WindowManager w = getWindowManager();
 
-    	/* project target is api v8 so it doesnt like this code
     	if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB_MR2)
     	{
         	Point size = new Point();
@@ -93,13 +96,19 @@ public class SameGame extends Activity {
     	    screenWidth = size.x;
     	    screenHeight = size.y;
     	}
-    	else*/
+    	else
     	{
     	    Display d = w.getDefaultDisplay();
     	    screenWidth = d.getWidth();
     	    screenHeight = d.getHeight();
     	}
+
+    	int boardHeight = screenHeight - 60; // 60 is the height that the bar area will have. not exactly sure how to get it correctly before it is drawn
+
+    	sgView.setLayoutParams(new RelativeLayout.LayoutParams(LayoutParams.WRAP_CONTENT, boardHeight ));
+
     	
+
     	
     	// sgView has not been layed out at this point, so we can't use its dimensions.
         //int screenHeight = sgView.getHeight();
@@ -110,11 +119,38 @@ public class SameGame extends Activity {
         int blockSize = sgView.getCellHeight(); // we're assuming squares here
         
         int maxCols  = screenWidth/blockSize - 1;
-        int maxRows = screenHeight/blockSize - 1;
+        int maxRows = boardHeight/blockSize - 1;
         
         Log.i("SameGame", " + Initializing gameboard [" + maxRows + " , " + maxCols + "]");
         
         sgModel = new SameGameModel(maxCols, maxRows); 
+    }
+
+    
+    // button handlers
+    public void onClickSkip(View v)
+    {
+    	sgController.nextLevel();
+    }
+    
+    public void onClickReset(View v)
+    {
+    	sgController.resetLevel();
+    }
+    
+    public void onClickBomb(View v)
+    {
+    	sgController.setClickMode(SameGameController.ClickMode.BOMB);
+    }
+    
+    public void onClickRowDestroy(View v)
+    {
+    	sgController.setClickMode(SameGameController.ClickMode.ROW_DESTROY);
+    }
+    
+    public void onClickColDestroy(View v)
+    {
+    	sgController.setClickMode(SameGameController.ClickMode.COL_DESTROY);
     }
     
     @Override
