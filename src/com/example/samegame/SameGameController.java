@@ -1,5 +1,7 @@
 package com.example.samegame;
 
+import android.util.Log;
+
 public class SameGameController {
 
 	// registered with view for touch events
@@ -16,29 +18,32 @@ public class SameGameController {
 		this.view = view;
 	}
 
-	public void HandleTouchUpOnCell(int row, int col)
+	public void handleTouchUpOnCell(int row, int col)
 	{
-		if (this.model.CellHasAdjacentSameColourCell(row, col))
+		if (this.model.cellHasAdjacentSameColourCell(row, col))
 		{
 			// condition is met for destroying stuff. DESTROY!!!
 			
-			this.model.DestroyAdjacentSameColourCells(row, col);
-			this.model.Collapse();
+			this.model.destroyAdjacentSameColourCells(row, col);
+			this.model.collapse();
+			
+			//Log.w("SameGame", " > [" + this.model.getNumCellsRemaining() + "] Cells remaining");
+			//this.model.writeGridToLog();			
 			
 			// detect empty grid
-			if (this.model.GridIsEmpty())
+			if (this.model.gridIsEmpty())
 			{
-				System.out.println("Grid is empty: Increasing Difficulty");
-				this.model.IncreaseDifficulty();
-				this.model.RandomizeGrid(this.model.GetCurrentDifficulty());
+				Log.i("SameGame", "Grid is empty: Increasing Difficulty");
+				this.model.increaseDifficulty();
+				this.model.randomizeGrid(this.model.getCurrentDifficulty());
 
 			}
 			
 			// detect "no moves"
-			if (this.model.NoMovesAvailable())
+			if (this.model.noMovesAvailable())
 			{
-				System.out.println("No moves: Resetting grid at current difficulty");
-				this.model.RandomizeGrid(this.model.GetCurrentDifficulty());
+				Log.i("SameGame", "No moves: Resetting grid at current difficulty");
+				this.model.randomizeGrid(this.model.getCurrentDifficulty());
 			}
 			
 			// notify view of updates

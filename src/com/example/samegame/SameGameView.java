@@ -7,6 +7,7 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnTouchListener;
@@ -34,14 +35,14 @@ public class SameGameView extends View implements OnTouchListener
 	private int boardOffsetY = 0;
 	
 	private int colours[] = { 
-			Color.BLACK, // BLACK
+			Color.BLACK, // No cell colour
 			Color.RED,
 			Color.BLUE,
 			Color.YELLOW,
 			Color.GREEN,
 			Color.MAGENTA,
 			Color.CYAN,
-			Color.LTGRAY};
+			Color.LTGRAY}; // the size of this array is tied directly to the value of model.maxDifficulty, and so should not be defined here
 	
 	
     /**
@@ -66,17 +67,17 @@ public class SameGameView extends View implements OnTouchListener
 		this.paint.setStrokeWidth(30.0f);
     }
 	
-    public void SetModel(SameGameModel model)
+    public void setModel(SameGameModel model)
     {
     	this.model = model;
     }
     
-    public void SetController(SameGameController controller)
+    public void setController(SameGameController controller)
     {
     	this.controller = controller;
     }
     
-    public Rect SetScreenRectForCell(int r, int c)
+    public Rect setScreenRectForCell(int r, int c)
     {
     	Rect rect = new Rect();
   
@@ -88,6 +89,10 @@ public class SameGameView extends View implements OnTouchListener
     	return rect;
     }
 
+    public int getCellHeight()
+    {
+    	return this.cellHeight;
+    }
     
     @Override
     public void onDraw(Canvas canvas) 
@@ -100,12 +105,16 @@ public class SameGameView extends View implements OnTouchListener
         this.screenHeight = this.getHeight();
         this.screenWidth = this.getWidth();
         
-        int numColumns = this.model.GetNumColumns();
-        int numRows = this.model.GetNumRows();
+        //Log.w("SameGame", "ondraw: [" + screenHeight + " , " + screenWidth + "]");
+
+        int numColumns = this.model.getNumColumns();
+        int numRows = this.model.getNumRows();
     
         this.boardOffsetX = this.screenWidth / 2 - (numColumns * this.cellWidth / 2);
         this.boardOffsetY = this.screenHeight / 2 - (numRows * this.cellHeight / 2);
 
+        if (this.boardOffsetX < 0 || this.boardOffsetY < 0)
+        	Log.e("SameGame", "ERROR: BOARD EXCEEDING SCREEN BOUNDARIES");
         
         // draw every individual tile
         
@@ -113,7 +122,7 @@ public class SameGameView extends View implements OnTouchListener
         {
         	for (int c = 0; c < numColumns; c++)
         	{
-        		int cellColourIndex = this.model.GetValueForCell(r,c);
+        		int cellColourIndex = this.model.getValueForCell(r,c);
         		
         		// TODO: throw error if cell colour is invalid
         		int cellColour = this.colours[0];
@@ -122,7 +131,7 @@ public class SameGameView extends View implements OnTouchListener
         			
         		this.paint.setColor(cellColour);
 
-        		Rect rect = this.SetScreenRectForCell(r, c);
+        		Rect rect = this.setScreenRectForCell(r, c);
         		
         		canvas.drawRect(rect, paint);
         		/*
@@ -136,22 +145,22 @@ public class SameGameView extends View implements OnTouchListener
         }
     }
 
-    private boolean TouchIsOnBoard(int xPos, int yPos)
+    private boolean touchIsOnBoard(int xPos, int yPos)
     {
     	return xPos > boardOffsetX && 
-    			xPos < ((this.model.GetNumColumns() * this.cellWidth) + boardOffsetX) &&
+    			xPos < ((this.model.getNumColumns() * this.cellWidth) + boardOffsetX) &&
     			yPos < this.screenHeight - boardOffsetY &&
-    			yPos > this.screenHeight - ((this.model.GetNumColumns() * this.cellHeight) + boardOffsetY);
+    			yPos > this.screenHeight - ((this.model.getNumColumns() * this.cellHeight) + boardOffsetY);
     }
     
-    private int ConvertYPosToRow(int yPos)
+    private int convertYPosToRow(int yPos)
     {
     	// TODO: does java handle converting doubles to ints correctly? i know in C++ this is an issue due to (usually) converting 64-bit to 32-bit
     	return (int) Math.floor((this.screenHeight - (yPos + boardOffsetY)) / cellHeight);
     }
 
     
-    private int ConvertXPosToColumn(int xPos)
+    private int convertXPosToColumn(int xPos)
     {
     	// TODO: does java handle converting doubles to ints correctly? i know in C++ this is an issue due to (usually) converting 64-bit to 32-bit
     	return (int) Math.floor((xPos - boardOffsetX) / cellWidth);
@@ -167,16 +176,16 @@ public class SameGameView extends View implements OnTouchListener
         	int xPos = (int) event.getX();
         	int yPos = (int) event.getY();
 
-        	if (!TouchIsOnBoard(xPos, yPos))
+        	if (!touchIsOnBoard(xPos, yPos))
         	{
         		System.out.println("Touch not on board!");
         		return false;
         	}
         	
-    		int c = this.ConvertXPosToColumn(xPos);
-    		int r = this.ConvertYPosToRow(yPos);
+    		int c = this.convertXPosToColumn(xPos);
+    		int r = this.convertYPosToRow(yPos);
     		
-    		this.controller.HandleTouchUpOnCell(r, c);
+    		this.controller.handleTouchUpOnCell(r, c);
     		
     		return true;
         }
