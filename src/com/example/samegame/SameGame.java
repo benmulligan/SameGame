@@ -42,11 +42,20 @@ public class SameGame extends Activity {
         sgController = new SameGameController(sgModel, sgView);
         
         sgView.setController(sgController); // TODO: shouldn't be like this, controller should be observer of view
-        sgView.setModel(sgModel);
+        
+        // set sgView as an observer of the model
+        sgModel.registerBoardObserver(sgView);
+        sgView.setBoard(sgModel);
+        
+        
+        // TODO: to be a bit more purist, i'd like the controller handling the touch events directly
+        sgView.setOnTouchListener(sgView);
+        
+
+        
         
         //sgView.setTextView((TextView) findViewById(R.id.text));
 
-        sgView.setOnTouchListener(sgView);
         
         // don't care about this kind of stuff yet
         /*
@@ -88,7 +97,7 @@ public class SameGame extends Activity {
     	int screenWidth = 0;
     	WindowManager w = getWindowManager();
 
-    	if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB_MR2)
+/*    	if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB_MR2)
     	{
         	Point size = new Point();
     	    w.getDefaultDisplay().getSize(size);
@@ -96,7 +105,7 @@ public class SameGame extends Activity {
     	    screenWidth = size.x;
     	    screenHeight = size.y;
     	}
-    	else
+    	else*/
     	{
     	    Display d = w.getDefaultDisplay();
     	    screenWidth = d.getWidth();

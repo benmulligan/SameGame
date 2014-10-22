@@ -1,12 +1,16 @@
 package com.example.samegame;
 
+import com.example.samegame.SameGameView.EHighlightMode;
+
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.DialogInterface;
 import android.util.Log;
 
-public class SameGameController {
 
+
+public class SameGameController {
+	
 	public enum ClickMode { NORMAL, BOMB, ROW_DESTROY, COL_DESTROY } ; 
 	
 	// registered with view for touch events
@@ -16,6 +20,8 @@ public class SameGameController {
 	private SameGameModel model;
 	private SameGameView view;
 	
+
+	
 	private ClickMode currentClickMode;
 	
 	public SameGameController(SameGameModel model, SameGameView view)
@@ -23,7 +29,7 @@ public class SameGameController {
 		this.model = model;
 		this.view = view;
 		
-		this.currentClickMode = ClickMode.NORMAL;
+		this.setClickMode(ClickMode.NORMAL);
 	}
 
 	public void resetLevel()
@@ -46,6 +52,23 @@ public class SameGameController {
 	public void setClickMode(ClickMode mode)
 	{
 		this.currentClickMode = mode;
+		
+		switch (this.currentClickMode) // this is a 1-1 mapping always. they should probably just use the same enum
+		{
+			case BOMB:
+				this.view.setTouchDownHighlightMode(EHighlightMode.BOMB);
+				break;
+			case ROW_DESTROY:
+				this.view.setTouchDownHighlightMode(EHighlightMode.ROW);
+				break;
+			case COL_DESTROY:
+				this.view.setTouchDownHighlightMode(EHighlightMode.COL);
+				break;
+			case NORMAL:
+			default:
+				this.view.setTouchDownHighlightMode(EHighlightMode.NORMAL);
+				break;
+		}
 	}
 
 	// handle the touch down
@@ -65,22 +88,23 @@ public class SameGameController {
 		this.model.destroy9x9Square(row, col);
 		this.model.collapse();
 
-		this.currentClickMode = ClickMode.NORMAL;
+		this.setClickMode(ClickMode.NORMAL);
 	}
 	
 	public void handleRowDestroyClick(int row, int col)
 	{
 		this.model.destroyRow(row);
 		this.model.collapse();
-		this.currentClickMode = ClickMode.NORMAL;
 		
+		this.setClickMode(ClickMode.NORMAL);		
 	}
 	
 	public void handleColDestroyClick(int row, int col)
 	{
 		this.model.destroyCol(col);
 		this.model.collapse();
-		this.currentClickMode = ClickMode.NORMAL;		
+		
+		this.setClickMode(ClickMode.NORMAL);
 	}
 	
 	public void handleTouchUpOnCell(int row, int col)
@@ -129,8 +153,7 @@ public class SameGameController {
 			d.show();
 		}
 			
-		// notify view of updates
-		this.view.invalidate();
+		this.model.notifyObservers(); // the model has changed, notify any observers. (TODO: the model itself should trigger this)
 	}
 	
 	// dialogs

@@ -1,10 +1,11 @@
 package com.example.samegame;
 
+import java.util.ArrayList;
 import java.util.Random;
 
 import android.util.Log;
 
-public class SameGameModel 
+public class SameGameModel implements IBoardModel
 {
 
 	// represents game state
@@ -23,10 +24,14 @@ public class SameGameModel
 	private int maxDifficulty = 9; // TODO: static const
 	private int minDifficulty = 3;
 	
-	private int emptyCellValue = 0; // TODO: look up how to do static const in java
+	private int emptyCellValue = 0; // TODO: look up how to do static const in java	
+
+	private ArrayList<IBoardObserver> observerList;
 	
 	public SameGameModel(int numCols, int numRows)
 	{
+		this.observerList = new ArrayList<IBoardObserver>();
+		
 		this.numColumns = numCols;
 		this.numRows = numRows;
 		
@@ -37,6 +42,28 @@ public class SameGameModel
 		this.numColours = minDifficulty;
 		this.randomizeGrid(this.numColours);
 	}
+	
+	// Use observer pattern for notifying anyone interested of state updates
+	//
+    public void registerBoardObserver(IBoardObserver obj) 
+    {
+    	// TODO: verify it doesnt exist already in the list?
+    	this.observerList.add(obj);
+	}
+    
+    public void unregisterBoardObserver(IBoardObserver obj) 
+    {
+    	this.observerList.remove(obj);
+    }
+    
+    //method to notify observers of change
+    public void notifyObservers() 
+    {
+    	for (int i = 0; i < this.observerList.size(); i++)
+    	{
+    		this.observerList.get(i).update();
+    	}
+    }	
 	
 	public int getCurrentDifficulty()
 	{

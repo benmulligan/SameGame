@@ -12,13 +12,18 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnTouchListener;
 
-public class SameGameView extends View implements OnTouchListener
+
+
+public class SameGameView extends View implements OnTouchListener, IBoardObserver
 {
 	// displays current game state
 	// receives touch events (relays to controller for handling)
 	// deals with rendering
 	
-	private SameGameModel model;
+	public enum EHighlightMode { NORMAL, BOMB, ROW, COL } ; 
+
+	
+	private IBoardModel model;
 	private SameGameController controller;
 	
     private int screenHeight;
@@ -33,6 +38,12 @@ public class SameGameView extends View implements OnTouchListener
 	// offset of the touch area from bottom left corner
 	private int boardOffsetX = 0;
 	private int boardOffsetY = 0;
+	
+	private EHighlightMode highlightMode = EHighlightMode.NORMAL;
+	private boolean touchDown = false;
+	private int lastTouchRow = -1;
+	private int lastTouchCol = -1;
+	
 	
 	private int colours[] = { 
 			Color.BLACK, // No cell colour
@@ -66,12 +77,7 @@ public class SameGameView extends View implements OnTouchListener
 		this.paint = new Paint();
 		this.paint.setStrokeWidth(30.0f);
     }
-	
-    public void setModel(SameGameModel model)
-    {
-    	this.model = model;
-    }
-    
+	    
     public void setController(SameGameController controller)
     {
     	this.controller = controller;
@@ -94,18 +100,69 @@ public class SameGameView extends View implements OnTouchListener
     	return this.cellHeight;
     }
     
+    private int getColourForCell(int row, int col)
+    {
+		int cellColourIndex = this.model.getValueForCell(row, col);
+		
+		int cellColour;
+		if (cellColourIndex >= 0 && cellColourIndex < this.colours.length)
+		{
+			cellColour = this.colours[cellColourIndex];
+		}
+		else
+		{
+			// ERROR: invalid colour
+    		// TODO: throw error
+			cellColour = this.colours[0];
+		}
+		
+		if (this.touchDown)
+		{
+			switch (this.highlightMode)
+			{
+				case ROW:
+				{
+					if (row == this.lastTouchRow)
+						cellColour = Color.CYAN;
+					break;
+				}
+				case COL:
+				{	
+					if (col == this.lastTouchCol)
+						cellColour = Color.CYAN;
+					break;
+				}
+				case BOMB:
+				{	
+					if ((row <= this.lastTouchRow + 1 && row >= this.lastTouchRow - 1) &&
+						(col <= this.lastTouchCol + 1 && col >= this.lastTouchCol - 1))
+						cellColour = Color.CYAN;
+					break;
+				}
+				case NORMAL:
+				default:
+					break;
+			}
+		}
+
+
+		return cellColour;
+    }
+    
     @Override
     public void onDraw(Canvas canvas) 
     {
         super.onDraw(canvas);
 
+        if (this.model == null) // currently, this chunk of code won't work unless a model exists
+        	return;
         
-        // this height/width and offset stuff ideally should not be done every draw.
+        // TODO: this height/width and offset stuff ideally should not be done every draw.
         // instead, this should only happen whenever the screen dims change (rotations, etc)
         this.screenHeight = this.getHeight();
         this.screenWidth = this.getWidth();
         
-        //Log.w("SameGame", "ondraw: [" + screenHeight + " , " + screenWidth + "]");
+        Log.w("SameGame", "ondraw: [" + screenHeight + " , " + screenWidth + "]");
 
         int numColumns = this.model.getNumColumns();
         int numRows = this.model.getNumRows();
@@ -121,13 +178,8 @@ public class SameGameView extends View implements OnTouchListener
         for (int r = 0; r < numRows; r++)
         {
         	for (int c = 0; c < numColumns; c++)
-        	{
-        		int cellColourIndex = this.model.getValueForCell(r,c);
-        		
-        		// TODO: throw error if cell colour is invalid
-        		int cellColour = this.colours[0];
-        		if (cellColourIndex >= 0 && cellColourIndex < colours.length)
-        			cellColour = this.colours[cellColourIndex];
+        	{        		
+        		int cellColour = this.getColourForCell(r, c);
         			
         		this.paint.setColor(cellColour);
 
@@ -159,37 +211,74 @@ public class SameGameView extends View implements OnTouchListener
     	return (int) Math.floor((this.screenHeight - (yPos + boardOffsetY)) / cellHeight);
     }
 
-    
     private int convertXPosToColumn(int xPos)
     {
     	// TODO: does java handle converting doubles to ints correctly? i know in C++ this is an issue due to (usually) converting 64-bit to 32-bit
     	return (int) Math.floor((xPos - boardOffsetX) / cellWidth);
     }
 
+    public void setTouchDownHighlightMode(EHighlightMode mode)
+    {
+    	this.highlightMode = mode;
+    }
+    
 	@Override
 	public boolean onTouch(View v, MotionEvent event) 
 	{
-		// only pass the touch up events along.
 		// TODO: maybe change this so that the touch down and touch up has to occur on the same object for the click to go through
-        if (event.getAction()==MotionEvent.ACTION_DOWN)
-        {
-        	int xPos = (int) event.getX();
-        	int yPos = (int) event.getY();
+		
+    	int xPos = (int) event.getX();
+    	int yPos = (int) event.getY();
+    	
+    	if (!touchIsOnBoard(xPos, yPos))
+    	{
+    		Log.i("SameGame", "Touch not on board!");
+    		return false;
+    	}
+    	
+		this.lastTouchCol = this.convertXPosToColumn(xPos);
+		this.lastTouchRow = this.convertYPosToRow(yPos);
+		
+		
+		switch (event.getAction())
+		{
+			case MotionEvent.ACTION_DOWN:
+			{
+				this.touchDown = true;
+				this.invalidate(); // trigger paint
+				break;
+			}
+			case MotionEvent.ACTION_UP:
+			{
+				// only handle the touchup if the touchdown was on the board
+				if (!this.touchDown)
+					break;
+				
+				this.touchDown = false;
+	    		this.controller.handleTouchUpOnCell(this.lastTouchRow, this.lastTouchCol);
+	    		break;
+			}	
+			case MotionEvent.ACTION_MOVE:
+			{
+				this.invalidate(); // trigger paint for highlighting
+				break;
+			}
+			default:
+				break;
+				
+		}
+		
+		return true;
+	}
 
-        	if (!touchIsOnBoard(xPos, yPos))
-        	{
-        		Log.i("SameGame", "Touch not on board!");
-        		return false;
-        	}
-        	
-    		int c = this.convertXPosToColumn(xPos);
-    		int r = this.convertYPosToRow(yPos);
-    		
-    		this.controller.handleTouchUpOnCell(r, c);
-    		
-    		return true;
-        }
+	@Override
+	public void update() {
+		this.invalidate();
+	}
 
-		return false;
+	@Override
+	public void setBoard(IBoardModel model) {
+		this.model = model;
 	}
 }
+
